@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Water Jug Problem — Interactive BFS</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111827;--ink2:#1f2937;--mute:#374151;--line:#9ca3af;--blue:#2563eb;--blue-l:#dbeafe;--green:#15803d;--green-l:#dcfce7;--amber:#92400e;--amber-l:#fef3c7;--red:#b91c1c;--red-l:#fee2e2;--water:#7ab8f5;
+--sans:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;--hand:Caveat,"Segoe Print","Bradley Hand",cursive}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:500 15px/1.5 var(--sans);background:#fff radial-gradient(#cfd2d8 1.1px,transparent 1.3px) 0 0/22px 22px}
+.page{max-width:1500px;margin:0 auto;padding:16px 24px 40px}
+h1{font:700 46px/1 var(--hand);margin:0;text-align:center}
+h2{font:700 20px/1.2 var(--sans);margin:0 0 8px}h2 small{font:600 14px var(--sans);color:var(--mute);margin-left:6px}
+header{text-align:center}.uline{width:300px;height:9px;display:block;margin:4px auto 0}
+.sub{margin:6px 0 12px;font-weight:600;color:var(--ink2)}
+button{font:600 15px var(--sans);color:var(--ink);background:#fff;border:1.5px solid #374151;border-radius:8px;padding:8px 14px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){background:#eff6ff;border-color:var(--blue)}button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:var(--blue);color:#fff;border-color:#1d4ed8}button.primary:hover:not(:disabled){background:#1d4ed8}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+.config{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:flex-end;border:1.5px solid var(--line);border-radius:10px;padding:10px 16px;background:#fffffff0}
+.config label,.config fieldset{display:flex;flex-direction:column;gap:3px;font-weight:600;font-size:14px;border:0;margin:0;padding:0}
+legend{padding:0;margin-bottom:3px;font-weight:600}.u{display:flex;align-items:center;gap:6px;font-weight:600}
+input{width:66px;padding:6px 8px;border:1.5px solid #6b7280;border-radius:6px;font:600 15px var(--sans);color:var(--ink);background:#fff}
+.cfgerr{margin:0;color:var(--red);font-weight:600}.cfgerr:empty{display:none}
+.jugpanel,.treepanel,.queuepanel,.rulespanel,.tutor{border:1.5px solid var(--line);border-radius:10px;background:#fffffff2;padding:12px 14px}
+.jugpanel{display:flex;flex-direction:column;align-items:center;min-width:0;overflow:visible}
+.cap{text-align:center}.cap span{display:block;font:700 12px var(--sans);letter-spacing:.08em;color:#1e3a8a}.cap b{font:700 30px var(--sans)}
+.jugs{display:flex;justify-content:center;align-items:flex-end;gap:6px;margin-top:10px;max-width:100%}
+.jugcol{display:flex;flex-direction:column;align-items:center;min-width:0}.jug{display:flex;align-items:flex-end}
+.glass{position:relative;width:clamp(56px,5vw,76px);height:190px;border:2.5px solid var(--ink);border-top:none;border-radius:0 0 16px 16px;background:#ffffffa0;overflow:hidden}
+.water{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(#8fc5f7,var(--water));border-top:2px solid #3b82c4;transition:height .8s cubic-bezier(.4,0,.2,1)}
+.scale{position:relative;width:28px;height:190px;margin-bottom:2.5px;flex:none}
+.scale span{position:absolute;right:0;transform:translateY(50%);font:600 11px var(--sans);color:var(--ink2);display:flex;align-items:center;gap:3px;line-height:1}
+.scale span:after{content:"";width:8px;border-top:2px solid var(--ink)}
+.jlabel{font:700 16px var(--sans);margin-top:6px;text-align:center}.jamt{font:600 14px var(--sans);color:var(--ink2)}
+.stream{width:30px;margin-bottom:110px;position:relative;height:30px;opacity:0;transition:opacity .2s;flex:none}.stream.on{opacity:1}.stream.rtl{transform:scaleX(-1)}
+.stream i{position:absolute;top:12px;left:0;right:10px;height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,#4f9be6 0 12px,#cfe5fb 12px 20px);animation:flow .45s linear infinite}
+.stream:after{content:"";position:absolute;right:0;top:7px;border:8px solid transparent;border-left:12px solid #4f9be6;border-right:0}
+@keyframes flow{to{background-position:20px 0}}
+.jinfo{margin-top:10px;text-align:center;font-weight:600;color:var(--ink2);font-size:14px}
+.treepanel{display:flex;flex-direction:column;min-width:0;min-height:0}
+.trhead{display:flex;flex-wrap:wrap;gap:4px 20px;align-items:baseline}.trhead h2{margin:0}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;font-size:13px;font-weight:600;color:var(--ink2)}
+.k{display:inline-block;width:14px;height:10px;border:2px solid #374151;border-radius:4px;margin-right:5px}
+.k.q{border-color:var(--blue);background:var(--blue-l)}.k.d{border-style:dashed}.k.e{background:#e5e7eb}.k.c{border-color:#1d4ed8;border-width:3px}.k.g{border-color:var(--green);background:var(--green-l)}
+.tree{height:64vh;min-height:420px;overflow:auto;margin-top:8px;border:1.5px solid var(--line);border-radius:8px;background:#fff}
+#tree{position:relative}#tree svg{position:absolute;left:0;top:0;pointer-events:none}
+.node{position:absolute;width:88px;height:46px;border:2px solid #374151;border-radius:12px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 16px/1.15 var(--sans);transform:none}
+.node small{font:700 10.5px var(--sans);letter-spacing:.04em;color:var(--ink2)}
+.node.queued{background:var(--blue-l);border-color:var(--blue);cursor:pointer}.node.expanded{background:#e5e7eb}
+.node.cur,.node.nxt{background:#eff6ff;border:3.5px solid #1d4ed8}.node.cur small,.node.nxt small{color:#1e3a8a}
+.node.goal{background:var(--green-l);border:3px solid var(--green)}.node.goal small{color:#14532d}
+.node.pop{animation:pop .5s}@keyframes pop{from{transform:scale(.6);opacity:0}}
+.dl{font:700 12px var(--sans);fill:var(--mute)}
+.eb{font:700 12px var(--sans);fill:#1e3a8a;text-anchor:middle}
+.queuepanel{margin-top:14px}.qhead{display:flex;gap:16px;align-items:baseline}.qhead h2{margin:0}.qmeta{font-weight:600;color:var(--ink2)}
+.queue{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;min-height:52px}
+.qi{border:1.5px solid var(--blue);background:var(--blue-l);border-radius:8px;padding:4px 12px;font:700 16px var(--sans);text-align:center;min-width:72px;cursor:pointer}
+.qi small{display:block;font:700 10.5px var(--sans);color:#1e40af}.qi.front{border:3.5px solid #1d4ed8;background:#bfdbfe}
+.qa{font-weight:700;color:var(--mute)}.qempty{color:var(--mute);font-weight:600}
+.rules{display:grid;grid-template-columns:1fr;gap:6px}
+.rule{display:flex;gap:8px;align-items:center;text-align:left;border:1.5px solid #9ca3af;padding:6px 8px;min-height:44px}
+.rule .n{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--blue);background:var(--blue-l);display:grid;place-items:center;font-weight:700;font-size:13px}
+.rule b{display:block;font:700 14.5px/1.2 var(--sans)}.rule small{display:block;font:600 12px var(--sans);color:var(--ink2)}
+.rule code{display:block;font:500 12.5px var(--sans);color:var(--ink2)}
+.rule.done:after{content:"✓";margin-left:auto;font-weight:700;color:var(--green)}
+.rule.ok{background:var(--green-l);border-color:var(--green)}.rule.warn{background:var(--amber-l);border-color:#d97706}
+.rule.err{background:var(--red-l);border-color:var(--red);animation:shake .4s}.rule.vis{background:var(--blue-l);border:1.5px dashed var(--blue)}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.msg{width:100%;min-height:44px;height:auto;overflow:visible;padding:7px 12px;border-radius:8px;border:1.5px solid;font-weight:600;visibility:hidden;margin-top:10px}.msg.show{visibility:visible}
+.msg.ok{background:var(--green-l);border-color:var(--green);color:#14532d}.msg.warn{background:var(--amber-l);border-color:#d97706;color:var(--amber)}
+.msg.err{background:var(--red-l);border-color:var(--red);color:#7f1d1d}.msg.info{background:var(--blue-l);border-color:var(--blue);color:#1e3a8a}
+.stats{margin:8px 0;font-weight:700;color:var(--ink2)}
+.goalbox{background:var(--green-l);border:2px solid var(--green);color:#14532d;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-weight:600}.goalbox b{font-size:17px}
+.explog h3{font:700 15px var(--sans);margin:4px 0}.explog ul{list-style:none;margin:0;padding:0;columns:2;gap:24px}.explog li{font-weight:600;font-size:14px}
+.l-ok{color:var(--green)}.l-vis{color:var(--blue)}.l-warn{color:var(--amber)}.l-err{color:var(--red)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Page 2 layout: jugs | rules, controls underneath */
+.workspace{display:grid;grid-template-columns:290px minmax(0,1fr) 320px;gap:16px;margin-top:14px;align-items:start}
+.treeLayout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;margin-top:12px;align-items:start}
+.side .explog ul{columns:1}
+.treepanel.full .tree{height:auto;min-height:0;overflow:hidden}
+#tree{transform-origin:0 0}
+.treeLayout>*{min-width:0}.side{display:flex;flex-direction:column;gap:14px}.side .queuepanel,.side .tutor{margin-top:0}
+.workspace .tree{height:68vh}
+.workspace>*{min-width:0}
+.rulespanel{min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;padding-top:12px;border-top:2px solid #374151}
+.free{display:flex;gap:6px;align-items:center;font-weight:600;margin-left:8px}.free input{width:auto}
+.tutor{margin-top:14px}
+.screen{display:none}.screen.on{display:block}
+.summary{width:100%;border:1.5px solid var(--line);border-radius:8px;background:#f8fafc;padding:8px 12px;margin-bottom:10px;font-size:13.5px;font-weight:600;color:var(--ink2)}
+.summary b{display:block;font:700 12px var(--sans);letter-spacing:.06em;color:#1e3a8a;margin-bottom:2px}
+
+/* Page 1: setup — one big horizontal row */
+#setupScreen.on{display:flex;align-items:center;justify-content:center;min-height:70vh}
+.config.setup{width:100%;max-width:1500px;margin:0;flex-direction:column;align-items:stretch;gap:32px;padding:clamp(24px,4vw,56px);border-width:2px;border-radius:18px}
+.config.setup h2{font-size:clamp(28px,3vw,42px);margin:0}
+.setupRow{display:flex;flex-wrap:nowrap;align-items:flex-end;justify-content:space-between;gap:24px clamp(20px,3vw,48px)}
+.config.setup label,.config.setup fieldset{font-size:clamp(16px,1.4vw,22px);gap:10px}
+.config.setup legend{font-size:clamp(16px,1.4vw,22px)}
+.config.setup .u{font-size:clamp(18px,1.6vw,24px);gap:10px;white-space:nowrap}
+.config.setup input{width:clamp(72px,7vw,120px);height:clamp(48px,4.5vw,64px);font-size:clamp(20px,2vw,28px);padding:6px 12px}
+.config.setup button{height:clamp(48px,4.5vw,64px);padding:0 clamp(24px,3vw,48px);font-size:clamp(18px,1.8vw,24px);border-radius:12px;white-space:nowrap}
+.config.setup .cfgerr{font-size:18px}
+@media(max-width:1100px){.setupRow{flex-wrap:wrap;justify-content:flex-start}}
+@media(max-width:1100px){.workspace{grid-template-columns:260px minmax(0,1fr) 280px}.treeLayout{grid-template-columns:minmax(0,1fr) 300px}.explog ul{columns:1}}
+@media(max-width:800px){.workspace,.treeLayout{grid-template-columns:1fr}.tree,.workspace .tree{height:420px}}
+</style></head>
+<body><div class="page">
+<header>
+  <h1>Water Jug Problem</h1>
+  <svg class="uline" viewBox="0 0 340 10" preserveAspectRatio="none" aria-hidden="true"><path d="M2 6C60 1 120 9 180 5S300 2 338 6" fill="none" stroke="#3b82f6" stroke-width="2.2"/></svg>
+  <p class="sub">Interactive BFS State-Space Playground — you perform the search, the app checks you.</p>
+</header>
+
+<!-- PAGE 1: setup -->
+<div id="setupScreen" class="screen on">
+<section class="config setup" aria-label="Configuration">
+  <h2>Set up your puzzle</h2>
+  <div class="setupRow">
+    <label>Jug A capacity<span class="u"><input id="capA" type="number" min="1" max="30" value="5"> L</span></label>
+    <label>Jug B capacity<span class="u"><input id="capB" type="number" min="1" max="30" value="3"> L</span></label>
+    <fieldset><legend>Initial state</legend><span class="u">A <input id="initX" type="number" min="0" value="0"> B <input id="initY" type="number" min="0" value="0"></span></fieldset>
+    <fieldset><legend>Goal state (blank = any value)</legend><span class="u">A <input id="goalX" type="number" min="0" value="4" placeholder="any"> B <input id="goalY" type="number" min="0" placeholder="any"></span></fieldset>
+    <button id="start" class="primary">Start game</button>
+  </div>
+  <p id="cfgErr" class="cfgerr" role="alert"></p>
+</section>
+</div>
+
+<!-- PAGE 2: play -->
+<div id="gameScreen" class="screen">
+<main class="workspace">
+  <section class="jugpanel" aria-label="Water jugs">
+    <div id="summary" class="summary"></div>
+    <div class="cap"><span id="curLabel">CURRENT BFS NODE</span><b id="curState">(0, 0)</b></div>
+    <div class="jugs"><div class="jugcol" id="colA"></div><div class="stream" id="stream" aria-hidden="true"><i></i></div><div class="jugcol" id="colB"></div></div>
+    <div id="jugInfo" class="jinfo"></div>
+    <div id="msg" class="msg" role="status"></div>
+  </section>
+  <div id="playTreeSlot">
+  <section class="treepanel" aria-label="State-space tree" id="treePanel">
+    <div class="trhead"><h2>State-space tree</h2>
+      <p class="legend"><span><i class="k q"></i>Queued</span><span><i class="k c"></i>Current / next</span><span><i class="k e"></i>Expanded</span><span><i class="k g"></i>Goal (leaf)</span><span><i class="k d"></i>↺ Visited ref.</span></p></div>
+    <div class="tree" id="treeWrap"><div id="tree"></div></div>
+  </section>
+  </div>
+  <aside class="rulespanel" aria-label="Production rules">
+    <h2>Rules <small id="ruleFor"></small></h2>
+    <div id="rules" class="rules"></div>
+  </aside>
+</main>
+
+<section class="controls" aria-label="Controls">
+  <button id="hint">Hint</button><button id="next" class="primary">Next BFS Step</button>
+  <button id="run">Run Guided BFS</button><button id="pause">Pause</button>
+  <button id="skip" title="Free mode: stop evaluating this node's remaining rules">Finish node</button>
+  <button id="check">Check my solution</button><button id="viewTree" class="primary">View tree →</button><button id="reset">Restart</button><button id="setupBack">Change setup</button>
+  <label class="free"><input type="checkbox" id="free" checked> Free mode (any rule order, skip rules, jump to any queued node)</label>
+</section>
+
+</div>
+
+<!-- PAGE 3: tree (left) + BFS queue & progress (right) -->
+<div id="treeScreen" class="screen">
+  <div class="controls" style="border-top:0;margin-top:0;padding-top:0"><button id="backPlay" class="primary">← Back to play</button><button id="check2">Check my solution</button><button id="reset2">Restart</button><button id="setupBack2">Change setup</button></div>
+  <div class="treeLayout">
+    <div id="treePageSlot"></div>
+    <aside class="side">
+      <section class="queuepanel" aria-label="BFS queue">
+        <div class="qhead"><h2>BFS queue</h2></div><div id="qMeta" class="qmeta"></div>
+        <div id="queue" class="queue"></div>
+      </section>
+      <section class="tutor" aria-label="Progress">
+        <h2>Progress</h2>
+        <p id="stats" class="stats"></p>
+        <div id="goalBox"></div><div id="checkBox"></div>
+        <div id="expLog" class="explog"></div>
+      </section>
+    </aside>
+  </div>
+</div>
+</div>
+<script>
+'use strict';
+/* ===== data ===== */
+const MAX_CAP=30;
+const RULES=[
+ {n:1,name:'Fill A',f:()=>`(${cfg.m}, y)`},{n:2,name:'Fill B',f:()=>`(x, ${cfg.n})`},
+ {n:3,name:'Empty A',f:()=>'(0, y)'},{n:4,name:'Empty B',f:()=>'(x, 0)'},
+ {n:5,name:'Pour B → A until A is full',f:()=>`transfer = min(y, ${cfg.m} − x)`},
+ {n:6,name:'Pour A → B until B is full',f:()=>`transfer = min(x, ${cfg.n} − y)`},
+ {n:7,name:'Pour A → B until A is empty',f:()=>`transfer = min(x, ${cfg.n} − y)`},
+ {n:8,name:'Pour B → A until B is empty',f:()=>`transfer = min(y, ${cfg.m} − x)`}];
+const $=id=>document.getElementById(id);
+const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let cfg={m:5,n:3,init:[0,0],goal:null};
+const B={nodes:new Map(),seq:0,queue:[],visited:new Set(),refs:[],curId:null,ri:0,log:[],logId:null,expanded:0,goalIds:[],path:new Set(),lastId:null,hint:0,running:false,preview:null,msg:null,did:new Set(),note:'',check:null};
+let pvTimer=null;
+const stateKey=([a,b])=>`${a},${b}`,fmt=s=>`(${s[0]}, ${s[1]})`;
+const isGoal=s=>!!cfg.goal&&(cfg.goal[0]===null||s[0]===cfg.goal[0])&&(cfg.goal[1]===null||s[1]===cfg.goal[1]);
+const get=id=>B.nodes.get(id);
+const validateState=([x,y],m=cfg.m,n=cfg.n)=>Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&y>=0&&x<=m&&y<=n;
+function createNode(state,parentId,rule,depth){
+  const nd={id:'n'+(B.seq++),state,parentId,ruleUsed:rule,depth,status:'queued',children:[],fresh:true};
+  B.nodes.set(nd.id,nd);return nd;
+}
+
+/* ===== configuration ===== */
+function readConfiguration(){
+  const v=id=>$(id).value.trim(),m=Number(v('capA')),n=Number(v('capB')),x=Number(v('initX')),y=Number(v('initY'));
+  if(!(Number.isInteger(m)&&m>0)||!(Number.isInteger(n)&&n>0))return{error:'Invalid capacity. Jug capacities must be positive whole numbers.'};
+  if(m>MAX_CAP||n>MAX_CAP)return{error:`Capacities above ${MAX_CAP} L are not supported.`};
+  if(v('initX')===''||v('initY')===''||!validateState([x,y],m,n))return{error:`Invalid initial state. Jug A: 0–${m} L, Jug B: 0–${n} L.`};
+  const gx=v('goalX'),gy=v('goalY');let goal=null;
+  if(gx!==''||gy!==''){
+    const a=gx===''?null:Number(gx),b=gy===''?null:Number(gy);
+    if((a!==null&&!(Number.isInteger(a)&&a>=0&&a<=m))||(b!==null&&!(Number.isInteger(b)&&b>=0&&b<=n)))return{error:`Invalid goal. Goal A must be blank (any) or 0–${m} L; goal B blank (any) or 0–${n} L.`};
+    goal=[a,b];}
+  return{m,n,init:[x,y],goal};
+}
+let SCREEN='setup';
+function showScreen(name){
+  SCREEN=name;
+  ['setup','game','tree'].forEach(n=>$(n+'Screen').classList.toggle('on',n===name));
+  $('treePanel').classList.toggle('full',name==='tree');
+  if(name!=='setup')$(name==='tree'?'treePageSlot':'playTreeSlot').appendChild($('treePanel'));
+  window.scrollTo(0,0);
+}
+function goTree(){showScreen('tree');renderAll()}
+function renderSummary(){
+  const g=cfg.goal;
+  $('summary').innerHTML=`<b>YOUR PUZZLE</b>Jug A: ${cfg.m} L · Jug B: ${cfg.n} L<br>Start: ${fmt(cfg.init)}<br>Goal: `+(g?`A = ${g[0]===null?'any':g[0]}, B = ${g[1]===null?'any':g[1]}`:'none set');
+}
+function backToSetup(){
+  B.running=false;clearTimeout(pvTimer);$('stream').className='stream';
+  showScreen('setup');
+}
+function start(){
+  const c=readConfiguration();$('cfgErr').textContent=c.error||'';if(c.error)return;
+  cfg=c;showScreen('game');renderSummary();renderRules();buildJugs();resetSession();
+  showMessage('info','Ready','Start BFS by expanding the initial state — choose R1, or press Next BFS Step.');
+  renderAll();
+}
+function resetSession(){
+  B.running=false;clearTimeout(pvTimer);$('stream').className='stream';
+  Object.assign(B,{nodes:new Map(),seq:0,queue:[],refs:[],curId:null,ri:0,log:[],logId:null,expanded:0,goalIds:[],path:new Set(),hint:0,preview:null,did:new Set(),note:'',check:null,autoNav:false});
+  B.visited=new Set();
+  const r=createNode(cfg.init,null,null,0);
+  B.visited.add(stateKey(r.state));B.queue.push(r.id);B.lastId=r.id;
+  if(isGoal(r.state))handleGoal(r);
+  settle();
+}
+
+/* ===== transition engine ===== */
+function calculatePour(src,[x,y]){
+  const dst=src==='A'?'B':'A',s=src==='A'?x:y,d=src==='A'?y:x,room=(src==='A'?cfg.n:cfg.m)-d;
+  if(s===0)return{type:'invalid',reason:`Jug ${src} is empty.`};
+  if(room===0)return{type:'invalid',reason:`Jug ${dst} is already full.`};
+  const amount=Math.min(s,room);
+  return{type:'valid',amount,state:src==='A'?[x-amount,y+amount]:[x+amount,y-amount],flow:src==='A'?'A_TO_B':'B_TO_A'};
+}
+function calculateTransition(rule,state){
+  const [x,y]=state,{m,n}=cfg;let res;
+  switch(rule){
+    case 1:res=x===m?{type:'nochange',reason:'Jug A is already full.'}:{type:'valid',state:[m,y]};break;
+    case 2:res=y===n?{type:'nochange',reason:'Jug B is already full.'}:{type:'valid',state:[x,n]};break;
+    case 3:res=x===0?{type:'nochange',reason:'Jug A is already empty.'}:{type:'valid',state:[0,y]};break;
+    case 4:res=y===0?{type:'nochange',reason:'Jug B is already empty.'}:{type:'valid',state:[x,0]};break;
+    case 5:case 8:res=calculatePour('B',state);break;
+    case 6:case 7:res=calculatePour('A',state);break;
+    default:throw new Error('Unknown rule '+rule);
+  }
+  if(res.type==='valid'&&!validateState(res.state))throw new Error('Invalid state generated: '+res.state);
+  return res;
+}
+
+/* ===== interactive BFS ===== */
+function reconstructPath(id){const p=[];for(let n=get(id);n;n=n.parentId&&get(n.parentId))p.unshift(n);return p}
+function handleGoal(node){B.goalIds.push(node.id);reconstructPath(node.id).forEach(n=>B.path.add(n.id))}
+const nextRule=()=>{for(let n=1;n<=8;n++)if(!B.did.has(n))return n;return 9};
+function begin(id){
+  settle();
+  if(!B.curId&&B.queue.length){
+    let i=id?B.queue.indexOf(id):0;if(i<0)i=0;
+    if(isGoal(get(B.queue[i]).state))return false;
+    const n=get(B.queue.splice(i,1)[0]);n.status='expanding';
+    Object.assign(B,{curId:n.id,ri:0,did:new Set(),log:[],logId:n.id,lastId:n.id,hint:0});
+  }
+  return !!B.curId;
+}
+function settle(){
+  while(!B.curId&&B.queue.length&&isGoal(get(B.queue[0]).state)){
+    const g=get(B.queue.shift());g.status='expanded';B.expanded++;B.lastId=g.id;
+    B.note=`★ ${fmt(g.state)} is a goal — not expanded further.`;
+  }
+}
+function finishNode(skipped){
+  const cur=get(B.curId);cur.status='expanded';B.expanded++;B.curId=null;B.ri=0;B.did=new Set();settle();
+  const f=B.queue[0];
+  B.msgTail=(skipped?`Skipped the remaining rules of ${fmt(cur.state)}. `:`Expanded ${fmt(cur.state)}. `)+(f?`Next BFS node: ${fmt(get(f).state)}.`:`BFS complete — ${B.goalIds.length?B.goalIds.length+' solution(s) found':'no solution reachable'}.`)+(B.note?' '+B.note:'');B.note='';
+}
+function applyRule(r){
+  if(!begin()){showMessage('info','BFS complete','The queue is empty.');B.msgTail=B.note;B.note='';renderAll();return false}
+  const cur=get(B.curId),free=$('free').checked;
+  if(B.did.has(r)){flashRule(r,'warn','Done');showMessage('warn','!',`R${r} was already evaluated for ${fmt(cur.state)}.`);renderAll();return false}
+  if(!free&&r!==nextRule()){
+    flashRule(r,'warn','Not yet');
+    showMessage('warn',`! BFS is evaluating R${nextRule()}`,`Process rules in order from R1 to R8 for ${fmt(cur.state)} (or tick Free mode).`);
+    renderAll();return false;
+  }
+  const res=calculateTransition(r,cur.state);let type=res.type,txt,kind;
+  if(type==='valid'){
+    const k=stateKey(res.state),ex=B.visited.has(k)?[...B.nodes.values()].find(n=>stateKey(n.state)===k):null;
+    if(ex){
+      type='visited';kind='info';
+      const dup=cur.children.includes(ex.id);
+      if(!dup)B.refs.push({from:cur.id,to:ex.id,rule:r});
+      txt=dup?'Same state already discovered from this node.':`↺ Already visited — ${fmt(res.state)} not added to queue.`;
+    }else{
+      B.visited.add(k);
+      const ch=createNode(res.state,cur.id,r,cur.depth+1);
+      cur.children.push(ch.id);B.queue.push(ch.id);type='new';kind='ok';
+      txt=`✓ New state discovered: ${fmt(res.state)}. Added to queue.`;
+      if(isGoal(res.state)){handleGoal(ch);txt=`★ Goal ${fmt(res.state)} found at depth ${ch.depth} (solution #${B.goalIds.length}). This branch stops here; BFS continues on other branches.`}
+    }
+    if(res.flow)animatePour(res.flow);
+    B.preview=res.state;clearTimeout(pvTimer);pvTimer=setTimeout(()=>{B.preview=null;$('stream').className='stream';renderJugs()},REDUCED?0:1300);
+  }else if(type==='invalid'){kind='err';txt=`✕ Cannot pour — ${res.reason}`}
+  else{kind='warn';txt=`! No change — ${res.reason}`}
+  B.log.push({rule:r,type,state:res.state});B.did.add(r);B.ri=B.did.size;B.hint=0;B.check=null;
+  flashRule(r,{new:'ok',visited:'vis',nochange:'warn',invalid:'err'}[type],CHIP[type]);
+  showMessage(kind,'',txt);
+  if(B.ri===8)finishNode(false);
+  renderAll();return true;
+}
+const CHIP={new:'✓ New',visited:'↺ Visited',nochange:'No change',invalid:'✕ Cannot'};
+const nextStep=()=>B.curId||B.queue.length?applyRule(nextRule()):(showMessage('info','BFS complete','The queue is empty.'),renderAll(),false);
+async function runGuided(){
+  if(B.running)return;B.running=true;renderControls();
+  while(B.running&&(B.curId||B.queue.length)){
+    nextStep();
+    await sleep(REDUCED?0:750);
+  }
+  B.running=false;renderControls();
+}
+function giveHint(){
+  const nd=B.curId?get(B.curId):B.queue.length?get(B.queue[0]):null;
+  if(!nd){showMessage('info','Hint','BFS is finished — nothing left to expand.');return renderAll()}
+  B.hint=Math.min(B.hint+1,3);const n=nextRule(),R=RULES[n-1];
+  if(B.hint===1)showMessage('info','Hint 1',`BFS expands the earliest unexpanded state in the queue — here ${fmt(nd.state)}. Apply R1…R8 in order.`);
+  else if(B.hint===2)showMessage('info','Hint 2',`Next is R${n}: ${R.name}. Is the source empty or the target full? Could the result already be visited?`);
+  else{const t=calculateTransition(n,nd.state);
+    showMessage('info','Show result',`R${n} from ${fmt(nd.state)} → `+(t.type==='valid'?`${fmt(t.state)} (${B.visited.has(stateKey(t.state))?'already visited':'new'})`:`${t.type==='invalid'?'cannot apply':'no change'} (${t.reason})`));}
+  renderAll();
+}
+
+function pickQueued(id){
+  if(!B.queue.includes(id)||B.running)return;
+  const free=$('free').checked,nd=get(id),front=get(B.queue[0]);
+  if(isGoal(nd.state))showMessage('info','Goal',`${fmt(nd.state)} is a goal — a branch stops at its goal, so it is not expanded.`);
+  else if(free&&(B.curId||id!==B.queue[0])){
+    if(B.curId)finishNode(true);
+    if(begin(id))showMessage('info','Free mode',`Expanding ${fmt(nd.state)}. Choose its rules.`);
+  }
+  else if(B.curId)showMessage('warn','!',`BFS is still expanding ${fmt(get(B.curId).state)} — finish R${nextRule()}…R8 first (or tick Free mode).`);
+  else if(id===B.queue[0])showMessage('info','Front of queue',`${fmt(front.state)} is next. Apply its rules R1 to R8.`);
+  else showMessage('warn','!',`BFS must expand ${fmt(front.state)} before ${fmt(nd.state)} (or tick Free mode).`);
+  if(SCREEN==='tree'&&B.curId)showScreen('game');
+  renderAll();
+}
+
+/* ===== check my solution ===== */
+function referenceSolve(){
+  const seen=new Set([stateKey(cfg.init)]),q=[{s:cfg.init,p:null,r:null,d:0}],sols=[];
+  while(q.length){
+    const n=q.shift();if(isGoal(n.s)){sols.push(n);continue}
+    for(let r=1;r<=8;r++){const t=calculateTransition(r,n.s);
+      if(t.type!=='valid'||seen.has(stateKey(t.state)))continue;
+      seen.add(stateKey(t.state));q.push({s:t.state,p:n,r,d:n.d+1});}
+  }
+  return sols;
+}
+const pathStr=n=>{const a=[];for(;n;n=n.p)a.unshift(n);return a.map((x,i)=>(i?` –R${x.r}→ `:'')+fmt(x.s)).join('')};
+const solLine=(n,i)=>`<br><b>#${i+1}</b> goal ${fmt(n.s)} — ${n.d} operation${n.d===1?'':'s'}: ${pathStr(n)}`;
+function computeCheck(){
+  if(!cfg.goal)return{ok:false,html:'Set a goal state first, then check your solution.'};
+  const sols=referenceSolve(),mine=B.goalIds.map(id=>get(id).depth),best=mine.length?Math.min(...mine):null;
+  if(!sols.length)return{ok:true,html:'No solution exists for this goal — it is unreachable with these jugs.'};
+  if(best===null)return{ok:false,html:`Your tree has not reached a goal. The actual BFS solution${sols.length>1?'s are':' is'}:`+sols.map(solLine).join('')};
+  if(best===sols[0].d){
+    const miss=sols.filter(n=>!B.goalIds.some(id=>stateKey(get(id).state)===stateKey(n.s)));
+    return{ok:true,html:`✓ Your solution is correct — you reached a goal in ${best} operations, the shortest possible.`+(miss.length?'<br>Other goal states BFS can reach:'+miss.map(solLine).join(''):'<br>You found every goal state BFS reaches.')};
+  }
+  return{ok:false,html:`Your solution is valid (${best} operations) but not the shortest. The actual BFS solution${sols.length>1?'s are':' is'}:`+sols.map(solLine).join('')};
+}
+function checkSolution(){B.check=computeCheck();goTree()}
+
+/* ===== rendering: jugs ===== */
+function buildJugs(){
+  const mx=Math.max(cfg.m,cfg.n);
+  [['A',cfg.m],['B',cfg.n]].forEach(([k,cap])=>{
+    const H=Math.round(130+110*cap/mx),step=Math.ceil(cap/10),vals=[];
+    for(let i=0;i<=cap;i+=step)vals.push(i);if(vals[vals.length-1]!==cap)vals.push(cap);
+    const scale=`<div class="scale" style="height:${H}px">${vals.map(v=>`<span style="bottom:${v/cap*100}%">${v}</span>`).join('')}</div>`;
+    $('col'+k).innerHTML=`<div class="jug">${scale}<div class="glass" style="height:${H}px"><div class="water" id="w${k}" style="height:0%"></div></div></div><div class="jlabel">Jug ${k} (${cap} L)</div><div class="jamt" id="l${k}"></div>`;
+  });
+}
+function focusNode(){return get(B.curId||B.queue[0]||B.lastId)}
+function renderJugs(){
+  const nd=focusNode(),s=B.preview||nd.state;
+  $('wA').style.height=(s[0]/cfg.m*100)+'%';$('wB').style.height=(s[1]/cfg.n*100)+'%';
+  $('lA').textContent=`${s[0]} / ${cfg.m} L`;$('lB').textContent=`${s[1]} / ${cfg.n} L`;
+  $('curLabel').textContent=B.curId?'CURRENT BFS NODE':B.queue.length?'NEXT BFS NODE':'LAST EXPANDED NODE';
+  $('curState').textContent=fmt(nd.state);
+  $('jugInfo').textContent=B.preview?`Result preview → ${fmt(B.preview)}`:B.curId?`Expanding at depth ${nd.depth}. ${B.ri} of 8 rules evaluated.`:B.queue.length?'Choose a rule or press Next BFS Step to begin expanding it.':'Search finished.';
+}
+function animatePour(flow){
+  if(flow!=='A_TO_B'&&flow!=='B_TO_A')return;
+  $('stream').className='stream on'+(flow==='B_TO_A'?' rtl':'');
+}
+function showMessage(kind,title,body){B.msg={k:kind,t:(title?title+' — ':'')+body};B.msgTail=''}
+function renderMessage(){
+  const m=$('msg');m.className=B.msg?'msg show '+B.msg.k:'msg';m.textContent=B.msg?B.msg.t+(B.msgTail?'  '+B.msgTail:''):'';
+}
+
+/* ===== rendering: rules, queue, status ===== */
+function renderRules(){
+  $('rules').innerHTML=RULES.map(r=>`<button class="rule" data-n="${r.n}"><span class="n">R${r.n}</span><span><b>${r.name}</b><code>${r.f()}</code><small></small></span></button>`).join('');
+  $('rules').onclick=e=>{const b=e.target.closest('.rule');if(b&&!B.running)applyRule(+b.dataset.n)};
+}
+function flashRule(n,cls,txt){
+  const b=document.querySelector(`.rule[data-n="${n}"]`);if(!b)return;
+  b.classList.remove('ok','warn','err','vis');void b.offsetWidth;b.classList.add(cls);b.querySelector('small').textContent=txt;
+  setTimeout(()=>{b.classList.remove(cls);b.querySelector('small').textContent=''},1200);
+}
+function renderControls(){
+  const over=!B.curId&&!B.queue.length;
+  $('viewTree').disabled=B.nodes.size<2;
+  $('next').disabled=B.running||over;$('run').disabled=B.running||over;$('pause').disabled=!B.running;$('skip').disabled=B.running||!B.curId||!$('free').checked;
+  document.querySelectorAll('.rule').forEach((b,i)=>b.classList.toggle('done',!!B.curId&&B.did.has(i+1)));
+}
+function renderQueue(){
+  const fr=B.queue[0]&&get(B.queue[0]),cur=B.curId&&get(B.curId);
+  $('qMeta').textContent=`Queue size: ${B.queue.length}`+(fr?` · Front: ${fmt(fr.state)}`:'')+(cur?` · Expanding: ${fmt(cur.state)} (taken from queue)`:'');
+  $('queue').innerHTML=B.queue.length?B.queue.map((id,i)=>`${i?'<span class="qa">→</span>':''}<div class="qi${i?'':' front'}" data-id="${id}">${i?'':'<small>FRONT</small>'}${fmt(get(id).state)}</div>`).join(''):'<span class="qempty">Queue is empty</span>';
+  $('ruleFor').textContent=cur?`for ${fmt(cur.state)} — ${B.ri}/8 evaluated`:fr?`next: expand ${fmt(fr.state)}`:'';
+}
+function renderStatus(){
+  const nd=focusNode();
+  $('stats').textContent=`Current depth: ${nd.depth} · Expanded states: ${B.expanded} · Visited states: ${B.visited.size} · Queue size: ${B.queue.length} · Solutions found: ${B.goalIds.length}`;
+  const done=!B.curId&&!B.queue.length;
+  if(B.goalIds.length){
+    $('goalBox').innerHTML=`<div class="goalbox"><b>${B.goalIds.length} solution${B.goalIds.length===1?'':'s'} found${done?' (BFS complete)':' so far'}</b>`+B.goalIds.map((id,i)=>{const p=reconstructPath(id),d=p.length-1;return`<br><b>#${i+1}</b> goal ${fmt(p[d].state)} — ${d} operation${d===1?'':'s'}${i===0?' (shortest)':''}: `+p.map((n,j)=>(j?` –R${n.ruleUsed}→ `:'')+fmt(n.state)).join('')}).join('')+'</div>'}
+  else $('goalBox').innerHTML=done&&cfg.goal?`<div class="goalbox" style="background:#fee2e2;border-color:#b91c1c;color:#7f1d1d">BFS complete — the goal was not reached in your tree. ${B.visited.size} states were discovered.</div>`:'';
+  $('checkBox').innerHTML=B.check?`<div class="goalbox"${B.check.ok?'':' style="background:#fef3c7;border-color:#d97706;color:#92400e"'}>${B.check.html}</div>`:'';
+  const ico={new:'✓ New',visited:'↺ Visited',nochange:'— No change',invalid:'✕ Invalid'};
+  $('expLog').innerHTML=B.log.length?`<h3>${B.curId?'Expanding':'Expanded'} ${fmt(get(B.logId).state)}</h3><ul>`+B.log.map(e=>`<li class="l-${{new:'ok',visited:'vis',nochange:'warn',invalid:'err'}[e.type]}">R${e.rule} → ${e.state&&e.type!=='invalid'?fmt(e.state):'—'} &nbsp;${ico[e.type]}</li>`).join('')+'</ul>':'';
+}
+
+/* ===== rendering: tree ===== */
+const NW=88,PAD=70,LEVEL=116;
+function renderTree(){
+  if(SCREEN==='setup')return;
+  const root=get('n0'),els=[],lines=[];let maxY=0,maxD=0;
+  const kids=nd=>nd.children.map(get);
+  const width=nd=>nd._w=Math.max(NW+28,kids(nd).reduce((s,c)=>s+width(c),0));
+  const W=width(root),front=!B.curId&&B.queue.length?B.queue[0]:null;
+  (function place(nd,left,d){
+    nd.cx=PAD+left+nd._w/2;nd.cy=d*LEVEL+14;maxY=Math.max(maxY,nd.cy);maxD=Math.max(maxD,d);
+    const ks=kids(nd);let off=left+(nd._w-ks.reduce((s,c)=>s+c._w,0))/2;
+    ks.forEach(c=>{place(c,off,d+1);off+=c._w;
+      const hot=B.path.has(c.id),mx=(nd.cx+c.cx)/2,my=nd.cy+46+(LEVEL-60)/2;
+      lines.push(`<path d="M${nd.cx} ${nd.cy+46}C${nd.cx} ${my},${c.cx} ${my},${c.cx} ${c.cy}" fill="none" stroke="${hot?'#15803d':'#6b7f9e'}" stroke-width="${hot?3.5:1.8}"/><circle cx="${mx}" cy="${my}" r="12" fill="#fff" stroke="${hot?'#15803d':'#2563eb'}" stroke-width="1.8"/><text class="eb" x="${mx}" y="${my+4}">R${c.ruleUsed}</text>`)});
+  })(root,0,0);
+  B.refs.filter(r=>r.from===B.logId).forEach(r=>{const a=get(r.from),b=get(r.to),dn=b.cy>a.cy,y1=dn?a.cy+46:a.cy,y2=dn?b.cy:b.cy+46;
+    lines.push(`<path d="M${a.cx} ${y1}L${b.cx} ${y2}" stroke="#6b7280" stroke-width="1.6" stroke-dasharray="5 4" fill="none"/><text class="eb" style="fill:#4b5563" x="${a.cx+(b.cx-a.cx)*.3}" y="${y1+(y2-y1)*.3-3}" stroke="#fff" stroke-width="4" paint-order="stroke">R${r.rule} ↺</text>`)});
+  B.nodes.forEach(n=>{
+    let c=n.status==='expanding'?'cur':n.id===front?'nxt':n.status,lab={cur:'CURRENT',nxt:'NEXT',queued:'QUEUED',expanded:'EXPANDED'}[c];
+    if(B.goalIds.includes(n.id)){c+=' goal';lab='★ GOAL'}
+    els.push(`<div class="node ${c}${n.fresh?' pop':''}" data-id="${n.id}" style="left:${n.cx-NW/2}px;top:${n.cy}px">${fmt(n.state)}<small>${lab}</small></div>`);n.fresh=false;
+  });
+  const guides=Array.from({length:maxD+1},(_,d)=>`<text class="dl" x="8" y="${d*LEVEL+14+28}">DEPTH ${d}</text>`).join('');
+  const tw=Math.max(W+PAD*2,320),th=maxY+90,t=$('tree');
+  t.style.width=tw+'px';t.style.height=th+'px';
+  const w=$('treeWrap'),full=SCREEN==='tree',sc=full?Math.min(1,(w.clientWidth-4)/tw):1;
+  t.style.transform=sc<1?`scale(${sc})`:'';w.style.height=full?Math.ceil(th*sc)+4+'px':'';
+  t.innerHTML=`<svg width="${tw}" height="${th}">${guides}${lines.join('')}</svg>`+els.join('');
+  if(full)return;
+  const f=focusNode();
+  w.scrollTo({left:Math.max(0,f.cx-w.clientWidth/2),top:Math.max(0,f.cy-w.clientHeight/3),behavior:REDUCED?'auto':'smooth'});
+}
+function renderAll(){
+  if(!B.curId&&!B.queue.length&&cfg.goal&&!B.check)B.check=computeCheck();
+  renderJugs();renderQueue();renderStatus();renderMessage();renderControls();renderTree();
+  // search finished -> move on to page 3 (tree + queue + progress)
+  if(SCREEN==='game'&&B.nodes.size>1&&!B.curId&&!B.queue.length&&!B.autoNav){B.autoNav=true;setTimeout(()=>{if(SCREEN==='game')goTree()},REDUCED?0:1500)}
+}
+
+/* ===== init ===== */
+function initialize(){
+  renderRules();
+  $('start').onclick=start;$('reset').onclick=start;
+  $('skip').onclick=()=>{if(B.curId){finishNode(true);renderAll()}};
+  $('check').onclick=checkSolution;
+  $('free').onchange=()=>{showMessage('info',$('free').checked?'Free mode on':'Strict mode on',$('free').checked?'Any rule order; click any queued node (queue or tree) to expand it right away.':'Rules must go R1→R8 and nodes are expanded in queue order.');renderAll()};
+  $('next').onclick=nextStep;$('run').onclick=runGuided;$('pause').onclick=()=>{B.running=false;renderControls()};$('hint').onclick=giveHint;
+  ['queue'].forEach(id=>$(id).addEventListener('click',e=>{const q=e.target.closest('.qi');if(q&&B.queue.length)pickQueued(q.dataset.id)}));
+  $('viewTree').onclick=goTree;$('backPlay').onclick=()=>{showScreen('game');renderAll()};
+  $('check2').onclick=checkSolution;$('reset2').onclick=start;$('setupBack2').onclick=backToSetup;
+  $('tree').addEventListener('click',e=>{const n=e.target.closest('.node.queued,.node.nxt');if(n)pickQueued(n.dataset.id)});
+  $('setupBack').onclick=backToSetup;
+  ['capA','capB','initX','initY','goalX','goalY'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')start()}));
+}
+initialize();
+window.addEventListener('resize',()=>{if(SCREEN==='tree')renderTree()});
+</script></body></html>
